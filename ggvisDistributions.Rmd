@@ -1,0 +1,83 @@
+---
+title: "ggvis Interactive Distributions"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+In this tutorial, we'll be using Hadley Wickham's latest package, ggvis, which is designed to create graphics for the web and incorporate interactions.  There's a lot learn about ggvis and the syntax is a bit different from ggplot2. To see more details see the ggvis overview at R Studio here: http://ggvis.rstudio.com/
+
+First install and load ggvis
+```{r}
+require(ggvis)
+```
+
+Every ggvis graphic starts with a call to ggvis(). The first argument is the data set that you want to plot, and the other arguments describe how to map variables to visual properties. In this case we'll just be using an x mapping, since we are plotting distributions
+
+```{r}
+p <- ggvis(mtcars, x = ~wt)
+```
+
+To actual plot the data we need to tell ggvis how we want to layer the visual elements. For example
+```{r}
+layer_histograms(p)
+```
+This plot has been rendered as a scalable vector graphic (SVG) or as an HTML 5 Canvas object, both of which are great for embedding in webpages. Click the Cog icon at the top right corner to see options to download the graphics in those formats.
+
+We can add interactivity with layer options. Like this for our histogram:
+```{r}
+layer_histograms(p, width =  input_slider(0, 2, step = 0.10, label = "width"),
+                 center = input_slider(0, 2, step = 0.05, label = "center"))
+```
+
+#![Static Histogram](ScreenShotInteractiveHist.png)
+
+Notice that two inputs are created for the user, slider to set the widnt and a sliter to set the center or our bins in our histogram. This interactive plot will appear in your plots window and is running (a little stop sign is showing). This will continue to run until you press the Stop Sign. To use these visualizations outside of R Studio, you'll have to host them on an RShiny server(more on that later).
+
+
+Next here is another example using the layer_densities rendering. You can see here we created an input_select dropdown list where the user can select which type of kernel to use in the density estimation, as well as a slider to set the bandwidth.
+
+```{r}
+layer_densities(p,    
+                adjust = input_slider(.1, 2, value = 1, step = .1, label = "Bandwidth adjustment"),
+                kernel = input_select(
+                  c("Gaussian" = "gaussian",
+                    "Epanechnikov" = "epanechnikov",
+                    "Rectangular" = "rectangular",
+                    "Triangular" = "triangular",
+                    "Biweight" = "biweight",
+                    "Cosine" = "cosine",
+                    "Optcosine" = "optcosine"),
+                  label = "Kernel")
+)
+```
+#![Static Kernel Density](ScreenShotInteractiveKD.png)
+
+
+One last thing about ggvis. Most of the tutorials use the %>% piping notation. Pipes are a way to simplify your code when you are calling multiple functions within one another. Basically, x %>%f is equivalent to f(x), placing the x object inside the f function. It's shorthand for embedding function calls inside one another. There are other types of pipes besides the %>%, but this one is most commonly used. For a great overview see this readme on github: https://github.com/tidyverse/magrittr/blob/master/README.md. Pipe notation is built into the ggvis package.  So the two examples above can be rewritten without the initial ggvis object call as follows:
+
+```{r}
+##-Interactive Histogram-#
+mtcars %>% 
+  ggvis(~wt) %>% 
+  layer_histograms(width =  input_slider(0, 2, step = 0.10, label = "width"),
+                   center = input_slider(0, 2, step = 0.05, label = "center"))
+
+#-Interactive KD-#
+
+mtcars %>% ggvis(x = ~wt) %>%
+  layer_densities(
+    adjust = input_slider(.1, 2, value = 1, step = .1, label = "Bandwidth adjustment"),
+    kernel = input_select(
+      c("Gaussian" = "gaussian",
+        "Epanechnikov" = "epanechnikov",
+        "Rectangular" = "rectangular",
+        "Triangular" = "triangular",
+        "Biweight" = "biweight",
+        "Cosine" = "cosine",
+        "Optcosine" = "optcosine"),
+      label = "Kernel")
+  )
+
+```
+
